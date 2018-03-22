@@ -33,6 +33,8 @@
     
     NSDictionary *properties = @{@"Category" : @"Music", @"FileName" : @"favorite.avi"};
     [MSAnalytics trackEvent:@"Video clicked" withProperties: properties];
+    
+    
     return YES;
 }
 
