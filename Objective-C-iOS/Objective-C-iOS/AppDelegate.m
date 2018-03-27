@@ -16,13 +16,16 @@
 @import AppCenterAnalytics;
 @import AppCenterCrashes;
 @import AppCenterPush;
-
+@interface AppDelegate ()<MSPushDelegate>
+@end
 @implementation AppDelegate
+
 
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    [MSPush setDelegate:self];
     [MSAppCenter start:@"e16b6efc-d513-4b88-b6e8-a737c8013dcd" withServices:
         @[
           [MSAnalytics class],
@@ -33,7 +36,6 @@
     
     NSDictionary *properties = @{@"Category" : @"Music", @"FileName" : @"favorite.avi"};
     [MSAnalytics trackEvent:@"Video clicked" withProperties: properties];
-    
     
     return YES;
 }
@@ -65,5 +67,27 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
-
+- (void)push:(MSPush *)push didReceivePushNotification:(MSPushNotification *)pushNotification {
+    NSString *title = pushNotification.title ?: @"";
+    NSString *message = pushNotification.message;
+    NSMutableString *customData = nil;
+    for (NSString *key in pushNotification.customData) {
+        ([customData length] == 0) ? customData = [NSMutableString new] : [customData appendString:@", "];
+        [customData appendFormat:@"%@: %@", key, [pushNotification.customData objectForKey:key]];
+    }
+    if (UIApplication.sharedApplication.applicationState == UIApplicationStateBackground) {
+        NSLog(@"Notification received in background, title: \"%@\", message: \"%@\", custom data: \"%@\"", title, message,
+              customData);
+    } else {
+        message = [NSString stringWithFormat:@"%@%@%@", (message ? message : @""), (message && customData ? @"\n" : @""),
+                   (customData ? customData : @"")];
+        
+        UIAlertController *alertController =
+        [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+        
+        // Show the alert controller.
+        [self.window.rootViewController presentViewController:alertController animated:YES completion:nil];
+    }
+}
 @end
